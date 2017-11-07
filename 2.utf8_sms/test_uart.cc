@@ -4,6 +4,43 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <termios.h>
+#include <string>
+#include <iostream>
+
+int send_uart(int fd)   /* I - Serial port file */
+{
+  char buffer[255];  /* Input buffer */
+  char *bufptr;      /* Current char in buffer */
+  int  nbytes;       /* Number of bytes read */
+  size_t  sz;        /* Number of tries so far */
+  char comm_a[25];
+//  for (tries = 0; tries < 3; tries ++)
+//  {
+   /* send an AT command followed by a CR */
+   strcpy(comm_a,  "AT\r");
+   sz = strlen(comm_a);
+   write(fd, comm_a, sz);
+// if (write(fd, "AT\r", 3) < 3)
+//   continue;
+
+   /* read characters into our string buffer until we get a CR or NL */
+    bufptr = buffer;
+    while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
+    {
+      bufptr += nbytes;
+      if (bufptr[-1] == '\n' || bufptr[-1] == '\r')
+        break;
+    }
+
+   /* nul terminate the string and see if we got an OK response */
+    *bufptr = '\0';
+
+    if (strncmp(buffer, "OK", 2) == 0)
+      return (0);
+//  }
+
+  return (-1);
+}
 
 int main(int argc,char** argv)
 {
@@ -15,7 +52,7 @@ int main(int argc,char** argv)
         unsigned char c='D';
         tcgetattr(STDOUT_FILENO,&old_stdio);
 
-        printf("Please start with %s /dev/ttyS1 (for example)\n",argv[0]);
+        printf("Please start with %s /dev/ttyS1 921600 (for example)\n",argv[0]);
         memset(&stdio,0,sizeof(stdio));
         stdio.c_iflag=0;
         stdio.c_oflag=0;
@@ -36,15 +73,19 @@ int main(int argc,char** argv)
         tio.c_cc[VTIME]=5;
 
         tty_fd=open(argv[1], O_RDWR | O_NONBLOCK);      
-        cfsetospeed(&tio,B921600);            // 115200 baud
-        cfsetispeed(&tio,B921600);            // 115200 baud
+        cfsetospeed(&tio,B921600);            // out baudrate
+        cfsetispeed(&tio,B921600);            // in baudrate
 
         tcsetattr(tty_fd,TCSANOW,&tio);
         while (c!='q')
         {
-                if (read(tty_fd,&c,1)>0)        write(STDOUT_FILENO,&c,1);              // if new data is available on the serial port, print it out
-                if (read(STDIN_FILENO,&c,1)>0)  write(tty_fd,&c,1);                     // if new data is available on the console, send it to the serial port
+        if (c=='y') send_uart(tty_fd);
+        if (read(tty_fd,&c,1)>0)        write(STDOUT_FILENO,&c,1); // if new data is available on the serial port, print it out
+        if (read(STDIN_FILENO,&c,1)>0)  write(tty_fd,&c,1);        // if new data is available on the console, send it to the serial port
         }
+
+//        init_modem(tty_fd);
+
 
         close(tty_fd);
         tcsetattr(STDOUT_FILENO,TCSANOW,&old_stdio);
