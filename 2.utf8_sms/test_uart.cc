@@ -24,8 +24,9 @@ int send_uart(int fd)   /* I - Serial port file */
 //   continue;
 
    /* read characters into our string buffer until we get a CR or NL */
-    bufptr = buffer;
-    while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
+  bufptr = buffer;
+  std::cout << "Buffer = " << buffer;
+  while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
     {
       bufptr += nbytes;
       if (bufptr[-1] == '\n' || bufptr[-1] == '\r')
@@ -79,9 +80,16 @@ int main(int argc,char** argv)
         tcsetattr(tty_fd,TCSANOW,&tio);
         while (c!='q')
         {
-        if (c=='y') send_uart(tty_fd);
         if (read(tty_fd,&c,1)>0)        write(STDOUT_FILENO,&c,1); // if new data is available on the serial port, print it out
-        if (read(STDIN_FILENO,&c,1)>0)  write(tty_fd,&c,1);        // if new data is available on the console, send it to the serial port
+        if (read(STDIN_FILENO,&c,1)>0) {     // if new data is available on the console, send it to the serial port
+            if (c=='y') {
+                c = 0;
+                send_uart(tty_fd);
+            }
+            else {
+                write(tty_fd,&c,1);
+            }
+        }
         }
 
 //        init_modem(tty_fd);
