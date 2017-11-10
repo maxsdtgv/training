@@ -24,20 +24,20 @@ int send_uart(int fd)   /* I - Serial port file */
 //   continue;
 
    /* read characters into our string buffer until we get a CR or NL */
-  bufptr = buffer;
-  std::cout << "Buffer = " << buffer;
-  while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
-    {
-      bufptr += nbytes;
-      if (bufptr[-1] == '\n' || bufptr[-1] == '\r')
-        break;
-    }
+   // bufptr = buffer;
+   //std::cout << "Buffer = " << buffer;
+   //while ((nbytes = read(fd, bufptr, buffer + sizeof(buffer) - bufptr - 1)) > 0)
+   //{
+   // bufptr += nbytes;
+   // if (bufptr[-1] == '\n' || bufptr[-1] == '\r')
+   //   break;
+   //}
 
    /* nul terminate the string and see if we got an OK response */
-    *bufptr = '\0';
+   // *bufptr = '\0';
 
-    if (strncmp(buffer, "OK", 2) == 0)
-      return (0);
+   // if (strncmp(buffer, "OK", 2) == 0)
+   //   return (0);
 //  }
 
   return (-1);
@@ -49,11 +49,11 @@ int main(int argc,char** argv)
         struct termios stdio;
         struct termios old_stdio;
         int tty_fd;
-
+        char in_buff[50];
         unsigned char c='D';
         tcgetattr(STDOUT_FILENO,&old_stdio);
 
-        printf("Please start with %s /dev/ttyS1 921600 (for example)\n",argv[0]);
+        printf("Please start with %s /dev/ttyUSB0 B921600 (for example)\n",argv[0]);
         memset(&stdio,0,sizeof(stdio));
         stdio.c_iflag=0;
         stdio.c_oflag=0;
@@ -73,22 +73,26 @@ int main(int argc,char** argv)
         tio.c_cc[VMIN]=1;
         tio.c_cc[VTIME]=5;
 
-        tty_fd=open(argv[1], O_RDWR | O_NONBLOCK);      
-        cfsetospeed(&tio,B921600);            // out baudrate
-        cfsetispeed(&tio,B921600);            // in baudrate
+        tty_fd=open(argv[1], O_RDWR | O_NONBLOCK);
+        cfsetospeed(&tio,argv[2]);            // out baudrate
+        cfsetispeed(&tio,argv[2]);            // in baudrate
 
         tcsetattr(tty_fd,TCSANOW,&tio);
-        while (c!='q')
+        while (c != 'q')
         {
-        if (read(tty_fd,&c,1)>0)        write(STDOUT_FILENO,&c,1); // if new data is available on the serial port, print it out
-        if (read(STDIN_FILENO,&c,1)>0) {     // if new data is available on the console, send it to the serial port
-            if (c=='y') {
-                c = 0;
-                send_uart(tty_fd);
-            }
-            else {
+            if (read(tty_fd,&c,1) > 0) {
+
+                write(STDOUT_FILENO,&c,1);
+            } // if new data is available on the serial port, print it out
+
+            if (read(STDIN_FILENO,&c,1) > 0) {     // if new data is available on the console, send it to the serial port
+                if (c == 'y') {
+                    c = 0;
+                    send_uart(tty_fd);
+                }
+                else {
                 write(tty_fd,&c,1);
-            }
+                }
         }
         }
 
