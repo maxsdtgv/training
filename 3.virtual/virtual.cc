@@ -4,7 +4,7 @@ using namespace std;
 
 class A {
 public:
-    virtual void who(){
+    virtual void who(){        // Try to delete word virtual
         cout << "Function 'who()' in class A.\n";
     }
 };
