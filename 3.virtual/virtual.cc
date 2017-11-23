@@ -4,39 +4,38 @@ using namespace std;
 
 class A {
 public:
-    virtual void who(){      //Try to delete or comment "virtual"
-        cout << "Base class A.\n";
+    virtual void who(){
+        cout << "Function 'who()' in class A.\n";
+    }
+};
+class B1 : public A {
+public:
+    void who(){
+        cout << "Function 'who()' in class B1, inheritate from class A.\n";
+    }
+};
+class D1 : public B1 {
+public:
+    void who(){
+        cout << "Function 'who()' in class D1, inheritate from class B1.\n";
     }
 };
 
-    class B1 : public A {
-    public:
-        void who(){
-            cout << "B1 inheritance from A.\n";
-            }
-    };
-        class D1 : public B1 {
-        public:
-            void who(){
-                cout << "D1 inheritance from B1.\n";
-            }
-        };
 
-
-int main() {
-    A main_cl;
-    A *a;
+int main(){
+    A base_cl;
+    A *q;
     B1 inher_cl_B;
     D1 inher_cl_D;
 
-    a = &main_cl;
-    a -> who();
+    q = &base_cl;
+    q -> who();
 
-    a = &inher_cl_B;
-    a -> who();
+    q = &inher_cl_B;
+    q -> who();
 
-    a = &inher_cl_D;
-    a -> who();
+    q = &inher_cl_D;
+    q -> who();
 
 
     return 0;
